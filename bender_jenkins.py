@@ -102,9 +102,10 @@ class BenderJenkinsScript(object):
         pool = ThreadPoolExecutor(max_workers=16)
         while True:
             server = self._create_server(brain)
-            for job in server.jobs:
-                result = pool.submit(do_notify, job, latest_build_states.get(job.name))
-                result.add_done_callback(on_done(job.name))
+            if server is not None:
+                for job in server.jobs:
+                    result = pool.submit(do_notify, job, latest_build_states.get(job.name))
+                    result.add_done_callback(on_done(job.name))
 
             stop_event.wait(self._update_interval(brain))
             if stop_event.is_set():
@@ -205,6 +206,8 @@ class BenderJenkinsScript(object):
         [FAILED] gui-master-redhat64
         '''
         server = self._create_server(brain)
+        if server is None:
+            msg.reply('There is no Jenkins server set.')
 
         msg.reply('This might take a while. Please wait...')
         job_pattern = match.group(1).strip()
