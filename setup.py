@@ -13,10 +13,10 @@ py_versions = ['2', '2.6', '2.7', '3.4']
 classifiers += ['Programming Language :: Python :: %s' % x for x in py_versions]
 
 setup(
-    name='bender-bender_jenkins',
-    description='bender-bender_jenkins: use Bender to interact with Jenkins CI',
+    name='bender-jenkins',
+    description='bender-jenkins: use Bender to interact with Jenkins CI',
     version='0.1.0',
-    url='https://github.com/bender-bot/bender-bender_jenkins',
+    url='https://github.com/bender-bot/bender-jenkins',
     license='LGPLv3',
     platforms=['unix', 'linux', 'osx', 'cygwin', 'win32'],
     author='Fabio Menegazzo',
@@ -26,7 +26,7 @@ setup(
     py_modules=['bender_jenkins'],
     entry_points={
         'bender_script': [
-            'bender_jenkins = bender_jenkins:BenderJenkinsScript',
+            'jenkins = bender_jenkins:BenderJenkinsScript',
         ],
     }
 )

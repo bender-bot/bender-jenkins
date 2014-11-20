@@ -32,7 +32,9 @@ class BenderJenkinsScript(object):
         '''
         url = brain[self._MEMORY_NAME].get('url')
         if url:
-            return Jenkins(url)
+            username = brain[self._MEMORY_NAME].get('username')
+            password = brain[self._MEMORY_NAME].get('password')
+            return Jenkins(url, username, password)
 
     def _update_interval(self, brain):
         '''
@@ -133,17 +135,6 @@ class BenderJenkinsScript(object):
     def shutdown(self):
         self._jenkins_notifier_stop_loop.set()
 
-    @respond(r'jenkins set url (.*)')
-    def set_url(self, brain, msg, match):
-        '''
-        Defines the URL where Jenkins service is running.
-
-        > jenkins set url http://localhost/
-        http://localhost/ was added as Jenkins URL.
-        '''
-        brain[self._MEMORY_NAME]['url'] = url = match.group(1).strip()
-        msg.reply('%s was added as Jenkins URL.' % url)
-
     @respond(r'jenkins get url')
     def get_url(self, brain, msg):
         '''
@@ -161,18 +152,6 @@ class BenderJenkinsScript(object):
         else:
             result = 'There is no such information available.'
         msg.reply(result)
-
-    @respond(r'jenkins set update interval (\d+)')
-    def set_update_interval(self, brain, msg, match):
-        '''
-        Interval (in seconds) for searching for new updates on Jenkins.
-
-        > jenkins set update interval 60
-        Jenkins update interval set to 60 seconds.
-        '''
-        interval = match.group(1).strip()
-        brain[self._MEMORY_NAME]['update_interval'] = interval
-        msg.reply('Jenkins update interval set to %s seconds.' % interval)
 
     @respond(r'jenkins get update interval')
     def get_update_interval(self, brain, msg):
