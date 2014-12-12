@@ -62,9 +62,11 @@ class BenderJenkinsScript(object):
         :param :class:`threading.Event` stop_event:
             Event that will be used to stop notification event.
         '''
+        latest_build_states = {}
+        server = self._create_server(brain)
+        pool = ThreadPoolExecutor(max_workers=16)
 
-        def do_notify(job, latest_build_state):
-
+        def do_notify(job):
             try:
                 # Retrieving last build info.
                 build = job.last_build
@@ -74,12 +76,13 @@ class BenderJenkinsScript(object):
                 current_state = -1, None
 
             # Current job was never cached or built there is nothing to compare with.
+            latest_build_state = latest_build_states.get(job.name)
             if latest_build_state is None:
-                latest_build_state = current_state
+                latest_build_states[job.name] = latest_build_state = current_state
 
             # Still the same build.
             if current_state == latest_build_state:
-                return latest_build_state
+                return
 
             # Notify about new build status.
             for job_pattern, notifiers in self._jenkins_notifiers.items():
@@ -90,24 +93,13 @@ class BenderJenkinsScript(object):
                 for msg in notifiers.values():
                     msg.reply(' [%s] %s\n        %s' % (current_state[1], job.name, build.info['url']))
 
+            latest_build_states[job.name] = current_state
             return current_state
 
-        latest_build_states = {}
-        class on_done(object):
-
-            def __init__(self, job_name):
-                self.job_name = job_name
-
-            def __call__(self, future):
-                latest_build_states[self.job_name] = future.result()
-        
-        pool = ThreadPoolExecutor(max_workers=16)
         while True:
-            server = self._create_server(brain)
             if server is not None:
                 for job in server.jobs:
-                    result = pool.submit(do_notify, job, latest_build_states.get(job.name))
-                    result.add_done_callback(on_done(job.name))
+                    pool.submit(do_notify, job)
 
             stop_event.wait(self._update_interval(brain))
             if stop_event.is_set():
